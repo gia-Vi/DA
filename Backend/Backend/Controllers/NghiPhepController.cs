@@ -1,4 +1,5 @@
 ﻿using Backend.Models;
+using Backend.Models.Dtos;
 using Backend.Request;
 using Backend.Services.BussinessServices;
 using Microsoft.AspNetCore.Mvc;
@@ -72,6 +73,17 @@ namespace Backend.Controllers
             {
                 return Problem(detail: ex.Message);
             }
+        }
+
+        [HttpPost("UpdateStatus")]
+        public async Task<IActionResult> UpdateOTStatus([FromBody] UpdateStatusNghiPhepRequest updateStatusNghiPhepRequest)
+        {
+            PostDto result = await _nghiPhepServices.UpdateStatusNghiPhep(updateStatusNghiPhepRequest);
+            if (result.Success == 0)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
         }
     }
 }

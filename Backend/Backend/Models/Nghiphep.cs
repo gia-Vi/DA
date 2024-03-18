@@ -21,5 +21,8 @@ public partial class Nghiphep : BaseModel
 
     public string? Lydotuchoi { get; set; }
 
+    public DateOnly NgaydangKi { get; set; }
+
+
     public virtual Nguoidung ManguoidungNavigation { get; set; } = null!;
 }

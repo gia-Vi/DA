@@ -4,7 +4,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
 import { useUser } from '../components/UserContext.js';
 import { format } from 'date-fns';
-
+import { fetchAPI } from '../apiConfig.js'; 
 
 const OTScreen = () => {
    const navigation = useNavigation();
@@ -13,10 +13,16 @@ const OTScreen = () => {
    const [data, setData] = useState([]);
    const [refreshing, setRefreshing] = useState(false);
    useEffect(() => {
-    fetch(`http://192.168.12.85:7218/api/OT/user/${user.manguoidung.toString()}`)
-      .then((response) => response.json())
-      .then(data => {
-        setData(data.sort((a, b) => b.maot - a.maot))})
+
+    const fetchData = async () => {
+      try {
+        const data = await fetchAPI(`OT/user/${user.manguoidung.toString()}`);
+        setData(data.sort((a, b) => b.maot - a.maot));
+      } catch (error) {
+        console.error("Error fetching attendance data:", error);
+      }
+    };
+    fetchData();
    }, [])
 
   const statusFilterMap = {
@@ -50,16 +56,17 @@ const OTScreen = () => {
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    fetch(`http://192.168.12.85:7218/api/OT/user/${user.manguoidung.toString()}`)
-    .then((response) => response.json())
-    .then(data => {
-      setData(data.sort((a, b) => b.manghiphep - a.manghiphep));
-      setRefreshing(false); // Kết thúc quá trình làm mới sau khi dữ liệu được cập nhật
-    })
-    .catch((error) => {
-      console.error('Error fetching data: ', error);
-      setRefreshing(false); // Kết thúc quá trình làm mới nếu có lỗi
-    });
+    const fetchData = async () => {
+      try {
+        const data = await fetchAPI(`OT/user/${user.manguoidung.toString()}`);
+        setData(data.sort((a, b) => b.maot - a.maot));
+        setRefreshing(false);
+      } catch (error) {
+        console.error("Error fetching attendance data:", error);
+        setRefreshing(false);
+      }
+    };
+    fetchData();
 
 }, [user.manguoidung]);
 
@@ -101,7 +108,7 @@ const OTScreen = () => {
         return (
           <TouchableOpacity key={application.id} onPress={() => handlePress(application.maot)}>
             <View key={application.id} style={styles.applicationCard}>
-              <Text>Ngày đăng kí: {application.dateApplied}</Text>
+              <Text>Ngày đăng kí: {format(application.ngaydangKi, "dd-MM-yyyy")}</Text>
               <Text>Từ: {` ${formatFromTimeRequest} `}</Text>
               <Text>Đến: {` ${formatToTimeRequest} `}</Text>
               <Text>Tổng: {sumHour} (p)</Text>

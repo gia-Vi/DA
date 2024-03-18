@@ -6,6 +6,8 @@ import { useUser } from '../components/UserContext.js';
 import { useNavigation } from '@react-navigation/native';
 import Loader from '../components/Loader.js';
 import { format } from 'date-fns';
+import { fetchAPI } from '../apiConfig.js'; 
+
 
 
 const App = () => {
@@ -37,18 +39,17 @@ const App = () => {
           return;
         }
         setLoading(true);
+        const currentTime = new Date();
         (async () => {
-          const response = await fetch('http://192.168.12.85:7218/api/OT', {
+          const response = await fetchAPI('OT', {
             method: 'POST',
             headers: {
               'Accept': 'application/json',
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({"maNguoiDung": user.manguoidung, "gioBatDau": format(fromDate, "yyyy-MM-dd'T'HH:mm:ss"), "gioKetThuc": format(toDate, "yyyy-MM-dd'T'HH:mm:ss"), "lyDo": reason, "trangThai": "Chờ duyệt"})
+            body: JSON.stringify({"maNguoiDung": user.manguoidung, "gioBatDau": format(fromDate, "yyyy-MM-dd'T'HH:mm:ss"), "gioKetThuc": format(toDate, "yyyy-MM-dd'T'HH:mm:ss"), "lyDo": reason, "trangThai": "Chờ duyệt", "ngaydangKi": format(currentTime, "yyyy-MM-dd")})
           })
-          const content = await response.json();
-
-          if(content.success == 1){
+          if(response.success == 1){
             setLoading(false);
             navigation.push('OTScreen');
           } 
@@ -83,7 +84,7 @@ const App = () => {
           <TouchableOpacity
             style={styles.input}
             onPress={() => setShowFromDatePicker(true)}>
-            <Text>{format(fromDate, "mm-HH dd-MM-yyyy")}</Text>
+            <Text>{format(fromDate, "HH:mm dd-MM-yyyy")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.iconContainer}
@@ -106,7 +107,7 @@ const App = () => {
           <TouchableOpacity
             style={styles.input}
             onPress={() => setShowToDatePicker(true)}>
-            <Text>{format(toDate, "mm-HH dd-MM-yyyy")}</Text>
+            <Text>{format(toDate, "HH:mm dd-MM-yyyy")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.iconContainer}
@@ -184,6 +185,8 @@ const styles = StyleSheet.create({
     padding: 12,
     paddingTop: 12,
     paddingBottom: 12,
+    borderColor: "#EF7720"
+
   },
   textArea: {
     height: 100, // Adjust the height as needed

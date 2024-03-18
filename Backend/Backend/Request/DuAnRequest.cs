@@ -16,6 +16,6 @@ namespace Backend.Request
 
         public string? Mota { get; set; }
 
-        public virtual ICollection<Nguoidung> Manguoidungs { get; set; } = new List<Nguoidung>();
+        public string? MaNguoiDung {  get; set; }
     }
 }

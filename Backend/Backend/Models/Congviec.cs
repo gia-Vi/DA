@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Backend.Models;
 
-public partial class Congviec
+public partial class Congviec : BaseModel
 {
     public int Macongviec { get; set; }
 
@@ -26,6 +26,9 @@ public partial class Congviec
     public string? Douutien { get; set; }
 
     public virtual Duan MaduanNavigation { get; set; } = null!;
+
+    public virtual ICollection<Binhluan> Binhluans { get; set; } = new List<Binhluan>();
+
 
     public virtual ICollection<NguoidungCongviec> NguoidungCongviecs { get; set; } = new List<NguoidungCongviec>();
 }

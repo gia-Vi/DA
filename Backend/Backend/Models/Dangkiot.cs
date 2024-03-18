@@ -19,6 +19,8 @@ public partial class Dangkiot : BaseModel
     public int Manguoidung { get; set; }
 
     public string? Lydotuchoi { get; set; }
+
+    public DateOnly NgaydangKi { get; set; }
     [JsonIgnore]
     public virtual Nguoidung ManguoidungNavigation { get; set; } = null!;
 }

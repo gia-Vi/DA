@@ -1,52 +1,120 @@
-import React, { useState, useContext } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useContext, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, RefreshControl } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { useNavigation } from '@react-navigation/native';
 import { useUser } from '../components/UserContext.js';
+import { format } from 'date-fns';
+import { fetchAPI } from '../apiConfig.js'; 
 
 
-const App = () => {
-  const [checked, setChecked] = useState('first');
+
+const App = ({route}) => {
   const { user } = useUser();
+  const [workdayText, setWorkdayText] = useState("Ngày làm việc");
+  const [monthYearText, setMonthYearText] = useState("");
+  const [monthText, setMonthText] = useState("");
+  const [dayText, setDayText] = useState("");
+  const [dayOfWeek, setDayOfWeek] = useState("");
+  const [startDayOfMonth, setStartDateOfMonth] = useState();
+  const [endDayOfMonth, setEndtDateOfMonth] = useState();
+  const daysOfWeekNames = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+  const [login, setLogin] = useState({});
+  const [refreshing, setRefreshing] = useState(false);
+
+
+  useEffect(() => {
+  }, [user]);
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await fetchAPI(`ChamCong/GetByDate?maNguoiDung=${user.manguoidung}&startRequest=${format(new Date(), "yyyy-MM-dd")}`);
+        setLogin(data);
+      } catch (error) {
+        console.error("Error fetching attendance data:", error);
+      }
+    };
+    fetchData();
+  }, [user.manguoidung]);
+
+  useEffect(() => {
+    const date = new Date();
+    const dayOfWeek = date.getDay(); 
+    const tempstartDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+    setStartDateOfMonth(parseInt(tempstartDayOfMonth.toLocaleString().split(',')[0].split('/')[1]),10);
+    const termEndDayOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    setEndtDateOfMonth(termEndDayOfMonth.toLocaleString().split(',')[0].split('/')[1]);
+    setMonthYearText(format(date, "MM/yyyy"));
+    setMonthText(format(date, "MM"));
+    setDayText(format(date, "dd"));
+    setDayOfWeek(daysOfWeekNames[dayOfWeek]);
+    const checkedDate = () => {
+      if (dayOfWeek === 0 || dayOfWeek === 6) {
+        setWorkdayText("Ngày nghỉ");
+      }
+    };
+    checkedDate();
+  }, []);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    const fetchData = async () => {
+      try {
+        const data = await fetchAPI(`ChamCong/GetByDate?maNguoiDung=${user.manguoidung}&startRequest=${format(new Date(), "yyyy-MM-dd")}`);
+        setLogin(data);
+        setRefreshing(false);
+
+      } catch (error) {
+        console.error("Error fetching attendance data:", error);
+        setRefreshing(false);
+      }
+    };
+    fetchData();
+
+}, [user.manguoidung]);
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} refreshControl={
+      <RefreshControl
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+      />
+    }>
       <View style={styles.header}>
 
-        <Text style={styles.headerText}>Số giờ làm tích lũy (01/09 - 30/09)</Text>
+        <Text style={styles.headerText}>Số giờ làm tích lũy ({startDayOfMonth}/{monthText} - {endDayOfMonth}/{monthText})</Text>
         <Text style={styles.timeText}>24:60</Text>
         <View style={styles.dateInfo}>
           <View style={styles.dateBadge}>
-            <Text style={styles.monthText}>Tháng 9/2021</Text>
-            <Text style={styles.dayText}>14</Text>
-            <Text style={styles.dayOftheWeeksText}>Thứ 3</Text>
+            <Text style={styles.monthText}>Tháng {monthYearText}</Text>
+            <Text style={styles.dayText}>{dayText}</Text>
+            <Text style={styles.dayOftheWeeksText}>{dayOfWeek}</Text>
 
           </View>
           <View style={styles.workdayInfo}>
-            <Text style={styles.workdayText}>Ngày làm việc</Text>
+            <Text style={styles.workdayText}>{workdayText}</Text>
             <Text style={styles.workdayHours}>Giờ làm việc: 08:00 - 17:00</Text>
-            <Text style={styles.checkInText}>Check-in: 07:50</Text>
-            <Text style={styles.checkOutText}>Check-out: 13:52</Text>
+            <Text style={styles.checkInText}>Check-in: {login.giocheckin ? format(login.giocheckin, "HH:mm:ss") : '--:--:--'}</Text>
+            <Text style={styles.checkOutText}>Check-out: {login.giocheckout ? format(login.giocheckout, "HH:mm:ss") : '--:--:--'}</Text>
           </View>
         </View>
       </View>
       <View style={styles.hrProfile}>
         <Text style={styles.hrText}> HỒ SƠ NHÂN SỰ</Text>
         <View style={styles.featureSection}>
-            <FeatureButton imageSource={require('../assets/images/ion_folder-outline.jpg')} label="Hồ sơ nhân sự" targetScreen="ProfileScreen"/>
-            <FeatureButton imageSource={require('../assets/images/profile.jpg')} label="Hợp đồng" />
+            <FeatureButton imageSource={require('../assets/images/ion_folder-outline.jpg')} label="Hồ sơ nhân sự" targetScreen="ProfileScreen"  id = {user.manguoidung} />
+            {/* <FeatureButton imageSource={require('../assets/images/profile.jpg')} label="Hợp đồng" /> */}
         </View>
       </View>
     
       <View style={styles.job}>
         <Text style={styles.hrText}> CÔNG-PHÉP-LƯƠNG</Text>
         <View style={styles.featureSection}>
-            <FeatureButton imageSource={require('../assets/images/checkin.jpg')} label="Điểm danh" targetScreen="TimeCheckingScreen"/>
-            <FeatureButton imageSource={require('../assets/images/ChamCong.jpg')} label="Chấm công" targetScreen="TimeKeeping"/>
-            <FeatureButton imageSource={require('../assets/images/business1.jpg')} label="Đk phép/ C. tác"  targetScreen="BussinessScreen"/>
-            <FeatureButton imageSource={require('../assets/images/task.jpg')} label="Nhiệm vụ" />
+            <FeatureButton imageSource={require('../assets/images/checkin.jpg')} label="Điểm danh" targetScreen="TimeCheckingScreen" />
+            <FeatureButton imageSource={require('../assets/images/ChamCong.jpg')} label="Chấm công" targetScreen="TimeKeeping" id = {user.manguoidung}/>
+            <FeatureButton imageSource={require('../assets/images/business1.jpg')} label="Đk phép/ C. tác"  targetScreen="BussinessScreen" />
+            <FeatureButton imageSource={require('../assets/images/task.jpg')} label="Nhiệm vụ" targetScreen="ProjectScreen"/>
             <FeatureButton imageSource={require('../assets/images/OT.jpg')} label="Đăng kí OT" targetScreen="OTScreen"/>
             <FeatureButton imageSource={require('../assets/images/salary.jpg')} label="Bảng lương" targetScreen="SalaryScreen"/>
-
         </View>
       </View>
       
@@ -54,14 +122,20 @@ const App = () => {
   );
 };
 
-const FeatureButton = ({ imageSource, label, targetScreen }) => {
-    const navigation = useNavigation();
-    return (
-    <TouchableOpacity style={styles.featureButton} onPress={() => navigation.navigate(targetScreen)}>
-      <Image source={imageSource} style={{width: 60, height: 60}} />
-      <Text style={styles.featureLabel}>{label}</Text>
-    </TouchableOpacity>
-    );
+const FeatureButton = ({ imageSource, label, targetScreen, id }) => {
+  const navigation = useNavigation();
+  
+  // Correctly set up the handlePress function to be called with an ID
+  const handlePress = () => {
+    navigation.navigate(targetScreen, { id });
+  };
+  
+  return (
+      <TouchableOpacity style={styles.featureButton} onPress={handlePress}>
+          <Image source={imageSource} style={{width: 60, height: 60}} />
+          <Text style={styles.featureLabel}>{label}</Text>
+      </TouchableOpacity>
+  );
 };
 
 const StatisticBox = ({ icon, label, value }) => (

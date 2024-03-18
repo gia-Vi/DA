@@ -1,5 +1,5 @@
 import React, { useState }  from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, SafeAreaView } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useUser } from '../components/UserContext.js';
@@ -7,6 +7,8 @@ import { useNavigation } from '@react-navigation/native';
 import Loader from '../components/Loader.js';
 import { format } from 'date-fns';
 import { Dropdown } from 'react-native-element-dropdown';
+import { fetchAPI } from '../apiConfig.js'; 
+
 
 
 const App = () => {
@@ -33,54 +35,48 @@ const App = () => {
     };
 
     const handleSubmitButton = () => {
-        setErrortext('');
+        //setErrortext('');
         if (!reason) {
           alert('Vui lòng nhập lý do yêu cầu tăng ca');
           return;
         }
-        setLoading(true);
+        //setLoading(true);
+        const currentDate = new Date();
         (async () => {
-          const response = await fetch('http://192.168.12.85:7218/api/OT', {
+          const response = await fetchAPI('NghiPhep', {
             method: 'POST',
             headers: {
               'Accept': 'application/json',
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({"maNguoiDung": user.manguoidung, "gioBatDau": format(fromDate, "yyyy-MM-dd'T'HH:mm:ss"), "gioKetThuc": format(toDate, "yyyy-MM-dd'T'HH:mm:ss"), "lyDo": reason, "trangThai": "Chờ duyệt"})
+            body: JSON.stringify({"maNguoiDung": user.manguoidung, "ngaybatdau": format(fromDate, "yyyy-MM-dd"), "ngayketthuc": format(toDate, "yyyy-MM-dd"), "lyDo": reason, "trangThai": "Chờ duyệt", "loainghiphep": value, "ngaydangKi": format(currentDate, "yyyy-MM-dd")})
           })
-          const content = await response.json();
-
-          if(content.success == 1){
+          if(response.success == 1){
             setLoading(false);
-            navigation.push('OTScreen');
+            navigation.push('BussinessScreen');
           } 
           // else{
           //   alert(content.message)
           // }
         })()
-
-
     };
-
-
     const data = [
-        { label: 'Item 1', value: '1' },
-        { label: 'Item 2', value: '2' },
-        { label: 'Item 3', value: '3' },
-        { label: 'Item 4', value: '4' },
-        { label: 'Item 5', value: '5' },
-        { label: 'Item 6', value: '6' },
-        { label: 'Item 7', value: '7' },
-        { label: 'Item 8', value: '8' },
+        { label: 'Nghỉ lễ', value: 'Nghỉ lễ' },
+        { label: 'Nghỉ phép năm', value: 'Nghỉ phép năm' },
+        { label: 'Nghỉ tang lễ', value: 'Nghỉ tang lễ' },
+        { label: 'Nghỉ bản thân kết hôn', value: 'Nghỉ bản thân kết hôn' },
+        { label: 'Nghỉ không lương', value: 'Nghỉ không lương' },
+        { label: 'Nghỉ liên quan NVQS', value: 'Nghỉ liên quan NVQS' },
+        { label: 'Nghỉ bản thân ốm', value: 'Nghỉ bản thân ốm' },
+        { label: 'Nghỉ chăm con ốm', value: 'Nghỉ chăm con ốm' },
+        { label: 'Nghỉ thai sản', value: 'Nghỉ thai sản' },
+        { label: 'Nghỉ công tác', value: 'Nghỉ công tác' },
+        { label: 'Hội nghi, hội thảo', value: 'Hội nghi, hội thảo' },
+        { label: 'Tai nạn lao động', value: 'Tai nạn lao động' },
       ];
-
-      
-    
-
-
   return (
     
-    <SafeAreaView style={styles.container}>
+    <ScrollView style={styles.container}>
  
       <Loader loading={loading} />
       <View style={styles.header}>
@@ -97,7 +93,7 @@ const App = () => {
         <View style={styles.inputGroup}>
         <Text style={styles.label}>Loại nghỉ phép (*)</Text>
             <Dropdown
-            style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
+            style={[styles.dropdown, isFocus && { borderColor: '#EF7720' }]}
             placeholderStyle={styles.placeholderStyle}
             selectedTextStyle={styles.selectedTextStyle}
             inputSearchStyle={styles.inputSearchStyle}
@@ -176,7 +172,7 @@ const App = () => {
           <Text style={styles.submitButtonText}> Tạo nghỉ phép, công tác</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </ScrollView>
   );
 };
 
@@ -224,6 +220,7 @@ const styles = StyleSheet.create({
     padding: 12,
     paddingTop: 12,
     paddingBottom: 12,
+    borderColor: "#EF7720"
   },
   textArea: {
     height: 100, // Adjust the height as needed
@@ -258,6 +255,8 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderRadius: 8,
     paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: "#EF7720"
 
   },
   icon: {

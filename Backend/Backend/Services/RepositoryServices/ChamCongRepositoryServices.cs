@@ -44,15 +44,10 @@ namespace Backend.Services.RepositoryServices
         public async Task<Dulieudiemdanh> FindByDate(int maNguoiDung, string startRequest)
         {
             DateTime startDate, endDate;
-            Dulieudiemdanh dulieudiemdanh = new Dulieudiemdanh();
+            //Dulieudiemdanh dulieudiemdanh = new Dulieudiemdanh();
             if (DateTime.TryParse(startRequest, out startDate))
             {
-                Console.WriteLine(startDate.Date);
-                dulieudiemdanh = await _context.Dulieudiemdanhs.FirstOrDefaultAsync(diemDanh => diemDanh.Giocheckin.Date == startDate.Date && diemDanh.Manguoidung == maNguoiDung);
-                if(dulieudiemdanh == null)
-                {
-                    return null;
-                }
+                Dulieudiemdanh dulieudiemdanh = await _context.Dulieudiemdanhs.FirstOrDefaultAsync(diemDanh => diemDanh.Giocheckin.Date == startDate.Date && diemDanh.Manguoidung == maNguoiDung);
                 return dulieudiemdanh;
             }
             else

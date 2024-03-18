@@ -18,9 +18,9 @@ namespace Backend.Controllers
         }
 
         [HttpGet("getByMonth")]
-        public async Task<IActionResult> GetLuong(int maNguoiDung, int thang)
+        public async Task<IActionResult> GetLuong(int maNguoiDung, int thang, int nam)
         {
-            Luong? luong = await _luongServices.FindByMonth(maNguoiDung, thang);
+            Luong? luong = await _luongServices.FindByMonth(maNguoiDung, thang, nam);
             if (luong == null)
             {
                 return NotFound();

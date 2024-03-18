@@ -15,7 +15,7 @@ const App = () => {
     const [toTime, setToTime] = useState("");
     const [status, setStatus] = useState("");
     useEffect(() => {
-        fetch(`http://192.168.12.85:7218/api/OT/${applicationId}`)
+        fetch(`http://192.168.1.8:7218/api/OT/${applicationId}`)
           .then((response) => response.json())
           .then(data => {
             setData(data);

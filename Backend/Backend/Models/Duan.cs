@@ -21,5 +21,5 @@ public partial class Duan : BaseModel
 
     public virtual ICollection<Congviec> Congviecs { get; set; } = new List<Congviec>();
 
-    public virtual ICollection<Nguoidung> Manguoidungs { get; set; } = new List<Nguoidung>();
+    public virtual ICollection<NguoidungDuan> NguoidungDuans { get; set; } = new List<NguoidungDuan>();
 }

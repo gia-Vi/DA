@@ -23,9 +23,28 @@ namespace Backend.Services.BussinessServices
             return await _oTRepositoryServices.FindByIdAsync(maDangKiOT);
         }
 
-        public async Task<List<Dangkiot>> FindAllAsync(int top, int skip, string? filter)
+        public async Task<List<DangKiOTResponse>> FindAllAsync(int top, int skip, string? filter)
         {
-            return await _oTRepositoryServices.FindAllAsync(top, skip, filter);
+            List<DangKiOTResponse> dangKiOTResponses = new List<DangKiOTResponse>();
+            List<Dangkiot> dangkiots = await _oTRepositoryServices.FindAll(top, skip, filter);
+            foreach(Dangkiot dangkiot in dangkiots)
+            {
+                DangKiOTResponse dangKiOTResponse = new DangKiOTResponse
+                {
+                    Maot = dangkiot.Maot,
+                    Giobatdau = dangkiot.Giobatdau,
+                    Gioketthuc = dangkiot.Gioketthuc,
+                    Lydo = dangkiot.Lydo,
+                    Trangthai = dangkiot.Trangthai,
+                    TenNguoiDung = dangkiot.ManguoidungNavigation.Hoten,
+                    Lydotuchoi = dangkiot.Lydotuchoi,
+                    NgaydangKi = dangkiot.NgaydangKi
+
+                };
+                dangKiOTResponses.Add(dangKiOTResponse);
+            }
+            return dangKiOTResponses;
+
         }
 
         public async Task<List<Dangkiot>> FindAllOTUserAsync(int maNguoiDung)
@@ -65,9 +84,9 @@ namespace Backend.Services.BussinessServices
            
         }
 
-        public async Task<PostDto> UpdateOT(Dangkiot dangkiot)
+        public async Task<PostDto> UpdateStatusOT(UpdateStatusOTRequest updateStatusOTRequest)
         {
-            if (dangkiot == null)
+            if (updateStatusOTRequest == null)
             {
                 return new PostDto
                 {
@@ -79,7 +98,12 @@ namespace Backend.Services.BussinessServices
             {
                 try
                 {
-                    await _oTRepositoryServices.UpdateAsync(dangkiot);
+                    Dangkiot dangkiot = new Dangkiot
+                    {
+                        Maot = updateStatusOTRequest.Maot,
+                        Trangthai = updateStatusOTRequest.Trangthai,
+                    };
+                    await _oTRepositoryServices.UpdateStatusOT(dangkiot);
                     return new PostDto
                     {
                         Success = 1,

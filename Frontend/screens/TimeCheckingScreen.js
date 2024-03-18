@@ -4,6 +4,8 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
 import { useUser } from '../components/UserContext.js';
 import { format } from 'date-fns';
+import { fetchAPI } from '../apiConfig.js'; 
+
 
 
 
@@ -69,7 +71,6 @@ const TimeTrackingScreen = () => {
   const currentDate = formatDate(new Date());
   const [remainingTime, setRemainingTime] = useState('00:00:00');
   const navigation = useNavigation();
-  const [refreshing, setRefreshing] = useState(false);
   const { user } = useUser();
   const [data, setData] = useState({});
   const [tempData, setTempData] = useState();
@@ -88,104 +89,119 @@ const TimeTrackingScreen = () => {
 
     return `${hours}:${minutes}:${seconds.toString().padStart(2, '0')}`;
   }
-
-  const fetchData = () => {
-    fetch(`http://192.168.12.85:7218/api/ChamCong/GetByDate?maNguoiDung=${user.manguoidung}&startRequest=${format(new Date(), "yyyy-MM-dd")}`)
-    .then((response) => response.json())
-    .then((json) => {
-      setData(json);
-      if (json && json.giocheckin) {
-        //const checkInTime = new Date(json.giocheckin);
-        setCheckInTime(new Date(json.giocheckin));
-      }
-      if (json && json.giocheckout) {
-        setCheckOutTime(new Date(json.giocheckout));
-        
-        let differenceInMilliseconds = new Date(json.giocheckout) - new Date(json.giocheckin);
-        let differenceInSeconds = Math.floor(differenceInMilliseconds / 1000);
-        let hours = Math.floor(differenceInSeconds / 3600).toString().padStart(2, '0');
-        differenceInSeconds = differenceInSeconds % 3600;
-        let minutes = Math.floor(differenceInSeconds / 60).toString().padStart(2, '0');
-        let seconds = differenceInSeconds % 60;
-
-        setTempData(`${hours}:${minutes}:${seconds.toString().padStart(2, '0')}`);
-        
-      }
-    }),
-    fetch(`http://192.168.12.85:7218/api/OT/GetByDate?maNguoiDung=${user.manguoidung}&startRequest=${format(new Date(), "yyyy-MM-dd")}`)
-    .then((response) => response.json()
-    .then((json) => {
-      if (json && json.giobatdau) {
-        setStartTimeOT(new Date(json.giobatdau));
-      }
-      if (json && json.gioketthuc) {
-        setEndTimeOT(new Date(json.gioketthuc));
-        
-        let differenceInMilliseconds = new Date(json.gioketthuc) - new Date(json.giobatdau);
-        console.log(differenceInMilliseconds);
-        let differenceInSeconds = Math.floor(differenceInMilliseconds / 1000);
-        let hours = Math.floor(differenceInSeconds / 3600).toString().padStart(2, '0');
-        differenceInSeconds = differenceInSeconds % 3600;
-        let minutes = Math.floor(differenceInSeconds / 60).toString().padStart(2, '0');
-        let seconds = differenceInSeconds % 60;
-
-        setSumTimeOT(`${hours}:${minutes}:${seconds.toString().padStart(2, '0')}`);
-        
-      }
-    }));
-
-  };
-
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await fetchAPI(`ChamCong/GetByDate?maNguoiDung=${user.manguoidung}&startRequest=${format(new Date(), "yyyy-MM-dd")}`);
+        setData(data);
+        if (data && data.giocheckin) 
+        {
+          setCheckInTime(new Date(data.giocheckin));
+        }
+        if (data && data.giocheckout && data.giocheckout != "0001-01-01T00:00:00") {
+          const checkOutTime = new Date(data.giocheckout);
+          setCheckOutTime(checkOutTime);
+          setTempData(difference(new Date(data.giocheckin), new Date(data.giocheckout)))
+        }
+      } catch (error) {
+        console.error("Error fetching attendance data:", error);
+      }
+    };
     fetchData();
-    }, []); 
-
-
-  const handleCheckIn = () => {
-    const currentTime = new Date();
-    (async () => {
-      const response = await fetch('http://192.168.12.85:7218/api/ChamCong', {
-        method: 'POST',
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({"maNguoiDung": user.manguoidung, "giocheckin": format(currentTime, "yyyy-MM-dd'T'HH:mm:ss"), "diachi": "string"})
+    const fetchDataOT = async () => {
+      try {
+        const data = await fetchAPI(`OT/GetByDate?maNguoiDung=${user.manguoidung}&startRequest=${format(new Date(), "yyyy-MM-dd")}`);
+        if (data && data.giobatdau) 
+        {
+            setStartTimeOT(new Date(data.giobatdau));
+        }
+        if (data && data.gioketthuc) 
+        {
+            setEndTimeOT(new Date(data.gioketthuc));
             
-      })
-      const content = await response.json();
-      console.log(content);
-      if(content.success == 1){
-        setCheckInTime(currentTime);
-      }
-      else{ 
-        alert(content.message)
-      }
-    })();
-
-  };
-
-  const handleCheckOut = () => {
+            let differenceInMilliseconds = new Date(data.gioketthuc) - new Date(data.giobatdau);
+            console.log(differenceInMilliseconds);
+            let differenceInSeconds = Math.floor(differenceInMilliseconds / 1000);
+            let hours = Math.floor(differenceInSeconds / 3600).toString().padStart(2, '0');
+            differenceInSeconds = differenceInSeconds % 3600;
+            let minutes = Math.floor(differenceInSeconds / 60).toString().padStart(2, '0');
+            let seconds = differenceInSeconds % 60;
     
-    const currentTime = new Date();
-    (async () => {
-      const response = await fetch('http://192.168.12.85:7218/api/ChamCong', {
-        method: 'PUT',
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({"maNguoiDung": user.manguoidung, "giocheckin": format(currentTime, "yyyy-MM-dd'T'HH:mm:ss"), "giocheckout": format(currentTime, "yyyy-MM-dd'T'HH:mm:ss"), "diachi": "string"})
-            
-      })
-      const content = await response.json();
-      console.log(content);
-      if(content.success == 1){
-        setCheckOutTime(currentTime);
-        setTempData(difference(checkInTime, currentTime));
+            setSumTimeOT(`${hours}:${minutes}:${seconds.toString().padStart(2, '0')}`);
+        }
+      } catch (error) {
+        console.error("Error fetching attendance data:", error);
       }
-    })();
-  };
+    };
+    fetchDataOT();
+    }, [user.manguoidung]); 
+
+
+    const handleCheckIn = async () => {
+      const currentTime = new Date();
+      try {
+        const content = await fetchAPI('ChamCong', {
+          method: 'POST',
+          body: JSON.stringify({
+            "maNguoiDung": user.manguoidung,
+            "giocheckin": format(currentTime, "yyyy-MM-dd'T'HH:mm:ss"),
+            "diachi": "string"
+          })
+        });
+        if (content.success == 1) {
+          setCheckInTime(currentTime);
+        } else {
+          alert(content.message);
+        }
+      } catch (error) {
+        console.error('Error during check-in:', error);
+      }
+    };
+
+    const handleCheckOut = async () => {
+      const currentTime = new Date();
+      try {
+        const content = await fetchAPI('ChamCong', {
+          method: 'PUT',
+          body: JSON.stringify({
+            "maNguoiDung": user.manguoidung,
+            "giocheckin": format(currentTime, "yyyy-MM-dd'T'HH:mm:ss"),
+            "diachi": "string",
+            "giocheckout": format(currentTime, "yyyy-MM-dd'T'HH:mm:ss")
+          })
+        });
+        if (content.success == 1) {
+          setCheckOutTime(currentTime);
+          setTempData(difference(checkInTime, currentTime));
+        } else {
+          alert(content.message);
+        }
+      } catch (error) {
+        console.error('Error during check-in:', error);
+      }
+    };
+
+  // const handleCheckOut = () => {
+    
+  //   const currentTime = new Date();
+  //   (async () => {
+  //     const response = await fetch('http://192.168.1.8:7218/api/ChamCong', {
+  //       method: 'PUT',
+  //           headers: {
+  //             'Accept': 'application/json',
+  //             'Content-Type': 'application/json'
+  //           },
+  //           body: JSON.stringify({"maNguoiDung": user.manguoidung, "giocheckin": format(currentTime, "yyyy-MM-dd'T'HH:mm:ss"), "giocheckout": format(currentTime, "yyyy-MM-dd'T'HH:mm:ss"), "diachi": "string"})
+            
+  //     })
+  //     const content = await response.json();
+  //     console.log(content);
+  //     if(content.success == 1){
+  //       setCheckOutTime(currentTime);
+  //       setTempData(difference(checkInTime, currentTime));
+  //     }
+  //   })();
+  // };
 
   useEffect(() => {
     const interval = setInterval(() => {

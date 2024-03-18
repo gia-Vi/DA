@@ -14,5 +14,7 @@
 
         public string? LyDoTuChoi { get; set; }
 
+        public DateOnly NgaydangKi { get; set; }
+
     }
 }

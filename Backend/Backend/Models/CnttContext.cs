@@ -14,7 +14,7 @@ public partial class CnttContext : DbContext
         : base(options)
     {
     }
-
+    public virtual DbSet<Binhluan> Binhluans { get; set; }
     public virtual DbSet<Congviec> Congviecs { get; set; }
 
     public virtual DbSet<Dangkiot> Dangkiots { get; set; }
@@ -31,12 +31,39 @@ public partial class CnttContext : DbContext
 
     public virtual DbSet<NguoidungCongviec> NguoidungCongviecs { get; set; }
 
+    public virtual DbSet<NguoidungDuan> NguoidungDuans { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseNpgsql("Host=localhost;Database=CNTT;Username=postgres;Password=0866449437khanh");
+        => optionsBuilder.UseNpgsql("Host=localhost;Database=DACNTT;Username=postgres;Password=0866449437khanh");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+
+        modelBuilder.Entity<Binhluan>(entity =>
+        {
+            entity.HasKey(e => e.Mabinhluan).HasName("binhluan_pkey");
+
+            entity.ToTable("binhluan");
+
+            entity.Property(e => e.Mabinhluan).HasColumnName("mabinhluan");
+            entity.Property(e => e.Macongviec).HasColumnName("macongviec");
+            entity.Property(e => e.Manguoidung).HasColumnName("manguoidung");
+            entity.Property(e => e.Noidung).HasColumnName("noidung");
+            entity.Property(e => e.Thoigian)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("thoigian");
+
+            entity.HasOne(d => d.MacongviecNavigation).WithMany(p => p.Binhluans)
+                .HasForeignKey(d => d.Macongviec)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("binhluan_macongviec_fkey");
+
+            entity.HasOne(d => d.ManguoidungNavigation).WithMany(p => p.Binhluans)
+                .HasForeignKey(d => d.Manguoidung)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("binhluan_manguoidung_fkey");
+        });
         modelBuilder.Entity<Congviec>(entity =>
         {
             entity.HasKey(e => e.Macongviec).HasName("congviec_pkey");
@@ -80,6 +107,7 @@ public partial class CnttContext : DbContext
             entity.Property(e => e.Lydo).HasColumnName("lydo");
             entity.Property(e => e.Lydotuchoi).HasColumnName("lydotuchoi");
             entity.Property(e => e.Manguoidung).HasColumnName("manguoidung");
+            entity.Property(e => e.NgaydangKi).HasColumnName("ngaydangki");
             entity.Property(e => e.Trangthai)
                 .HasMaxLength(50)
                 .HasColumnName("trangthai");
@@ -143,6 +171,7 @@ public partial class CnttContext : DbContext
             entity.Property(e => e.Luongngoaigio).HasColumnName("luongngoaigio");
             entity.Property(e => e.Luongthuong).HasColumnName("luongthuong");
             entity.Property(e => e.Manguoidung).HasColumnName("manguoidung");
+            entity.Property(e => e.Nam).HasColumnName("nam");
             entity.Property(e => e.Ngaycong).HasColumnName("ngaycong");
             entity.Property(e => e.Phiguixe).HasColumnName("phiguixe");
             entity.Property(e => e.Phucapcom).HasColumnName("phucapcom");
@@ -173,6 +202,7 @@ public partial class CnttContext : DbContext
             entity.Property(e => e.Lydotuchoi).HasColumnName("lydotuchoi");
             entity.Property(e => e.Manguoidung).HasColumnName("manguoidung");
             entity.Property(e => e.Ngaybatdau).HasColumnName("ngaybatdau");
+            entity.Property(e => e.NgaydangKi).HasColumnName("ngaydangki");
             entity.Property(e => e.Ngayketthuc).HasColumnName("ngayketthuc");
             entity.Property(e => e.Trangthai)
                 .HasMaxLength(50)
@@ -237,38 +267,17 @@ public partial class CnttContext : DbContext
             entity.Property(e => e.Tongiao)
                 .HasMaxLength(50)
                 .HasColumnName("tongiao");
-
-            entity.HasMany(d => d.Maduans).WithMany(p => p.Manguoidungs)
-                .UsingEntity<Dictionary<string, object>>(
-                    "NguoidungDuan",
-                    r => r.HasOne<Duan>().WithMany()
-                        .HasForeignKey("Maduan")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("nguoidung_duan_maduan_fkey"),
-                    l => l.HasOne<Nguoidung>().WithMany()
-                        .HasForeignKey("Manguoidung")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("nguoidung_duan_manguoidung_fkey"),
-                    j =>
-                    {
-                        j.HasKey("Manguoidung", "Maduan").HasName("nguoidung_duan_pkey");
-                        j.ToTable("nguoidung_duan");
-                        j.IndexerProperty<int>("Manguoidung").HasColumnName("manguoidung");
-                        j.IndexerProperty<int>("Maduan").HasColumnName("maduan");
-                    });
         });
 
         modelBuilder.Entity<NguoidungCongviec>(entity =>
         {
-            entity.HasKey(e => new { e.Manguoidung, e.Macongviec }).HasName("nguoidung_congviec_pkey");
+            entity.HasKey(e => e.Id).HasName("nguoidung_congviec_pkey");
 
             entity.ToTable("nguoidung_congviec");
 
-            entity.Property(e => e.Manguoidung).HasColumnName("manguoidung");
+            entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Macongviec).HasColumnName("macongviec");
-            entity.Property(e => e.TinhtrangCv)
-                .HasMaxLength(50)
-                .HasColumnName("tinhtrang_cv");
+            entity.Property(e => e.Manguoidung).HasColumnName("manguoidung");
 
             entity.HasOne(d => d.MacongviecNavigation).WithMany(p => p.NguoidungCongviecs)
                 .HasForeignKey(d => d.Macongviec)
@@ -279,6 +288,27 @@ public partial class CnttContext : DbContext
                 .HasForeignKey(d => d.Manguoidung)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("nguoidung_congviec_manguoidung_fkey");
+        });
+
+        modelBuilder.Entity<NguoidungDuan>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("nguoidung_duan_pkey");
+
+            entity.ToTable("nguoidung_duan");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Maduan).HasColumnName("maduan");
+            entity.Property(e => e.Manguoidung).HasColumnName("manguoidung");
+
+            entity.HasOne(d => d.MaduanNavigation).WithMany(p => p.NguoidungDuans)
+                .HasForeignKey(d => d.Maduan)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("nguoidung_duan_maduan_fkey");
+
+            entity.HasOne(d => d.ManguoidungNavigation).WithMany(p => p.NguoidungDuans)
+                .HasForeignKey(d => d.Manguoidung)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("nguoidung_duan_manguoidung_fkey");
         });
 
         OnModelCreatingPartial(modelBuilder);

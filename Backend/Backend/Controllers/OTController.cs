@@ -36,7 +36,7 @@ namespace Backend.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Dangkiot>>> Get(int top, int skip, string? filter)
+        public async Task<ActionResult<IEnumerable<DangKiOTResponse>>> Get(int top, int skip, string? filter)
         {
             try
             {
@@ -86,6 +86,17 @@ namespace Backend.Controllers
             {
                 return Problem(detail: ex.Message);
             }
+        }
+
+        [HttpPost("UpdateStatus")]
+        public async Task<IActionResult> UpdateOTStatus([FromBody] UpdateStatusOTRequest updateStatusOTRequest)
+        {
+            PostDto result = await _oTServices.UpdateStatusOT(updateStatusOTRequest);
+            if (result.Success == 0)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
         }
     }
 }

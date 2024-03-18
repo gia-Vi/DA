@@ -15,5 +15,8 @@
         public int Manguoidung { get; set; }
 
         public string? Lydotuchoi { get; set; }
+
+        public DateOnly NgaydangKi { get; set; }
+
     }
 }

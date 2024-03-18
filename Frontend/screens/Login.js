@@ -5,6 +5,7 @@ import { CheckBox } from 'react-native-elements';
 import Loader from '../components/Loader.js';
 import {LinearGradient} from 'expo-linear-gradient';
 import {useUser} from '../components/UserContext.js';
+import { fetchAPI } from '../apiConfig.js'; 
 
 
 
@@ -18,6 +19,7 @@ const LoginScreen = ({navigation}) => {
     const emailInputRef = createRef();
     const passwordInputRef = createRef();
     const { setUser } = useUser();
+
     const handleSubmitButton = () => {
       setErrortext('');
       if (!username) {
@@ -29,33 +31,40 @@ const LoginScreen = ({navigation}) => {
         return;
       }
       setLoading(true);
-      (async () => {
-        const loginResponse = await fetch('http://192.168.12.85:7218/api/Nguoidung/login', {
-          method: 'POST',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({"email": username, "password": password})
-        });
-        const content = await loginResponse.json();
-        setLoading(false);
-        if(content.success == 1){         
-          fetch(`http://192.168.12.85:7218/api/Nguoidung?email=${username}`)
-          .then(response => response.json())
-          .then(data => {
-            setUser(data); // This will print the data to the console
+      const login = async (username, password) => {
+        try {
+          const loginResponse = await fetchAPI('Nguoidung/login', {
+            method: 'POST',
+            body: JSON.stringify({ "email": username, "password": password })
           })
-          .catch(error => {
-            // handle the error
-          });
-          navigation.replace('HomeScreen');
+          setLoading(false); //
+          if (loginResponse.success == 1) {
+            await getUserInfo(username);
+
+          } else {
+            alert('Đăng nhập không thành công');
+          }
+        } catch (error) {
+          console.error('Error during login:', error);
+          setLoading(false); 
         }
-        else{
-          alert(content.message);
+      };
+
+      const getUserInfo = async (username) => {
+        try {
+          const data = await fetchAPI(`Nguoidung?email=${username}`);
+          setUser(data);
+          if (data.chucvu === "admin") {
+            navigation.replace('AdminHomeScreen');
+          } else {
+            navigation.replace('HomeScreen');
+          }
+        } catch (error) {
+          console.error('Error fetching user info:', error);
         }
-      })();
-    };
+      };
+      login(username, password);
+      };
     
     return (
       

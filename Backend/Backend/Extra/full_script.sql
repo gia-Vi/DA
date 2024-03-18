@@ -31,9 +31,9 @@ CREATE TABLE DuAn(
 );
 
 CREATE TABLE NguoiDung_DuAn(
+	  id serial NOT NULL PRIMARY KEY,
 	  MaNguoiDung INT NOT NULL,
 	  MaDuAn INT NOT NULL,
-	  PRIMARY KEY(MaNguoiDung, MaDuAn),
 	  FOREIGN KEY(MaNguoiDung) REFERENCES NguoiDung(MaNguoiDung),
 	  FOREIGN KEY(MaDuAn) REFERENCES DuAn(MaDuAn)
 );
@@ -54,10 +54,10 @@ CREATE TABLE CongViec
 );
 
 CREATE TABLE NguoiDung_CongViec(
+	  id serial NOT NULL PRIMARY KEY,
 	  MaNguoiDung INT NOT NULL,
 	  MaCongViec INT NOT NULL,
 	  TinhTrang_CV VARCHAR(50) NOT NULL,
-	  PRIMARY KEY(MaNguoiDung, MaCongViec),
 	  FOREIGN KEY(MaNguoiDung) REFERENCES NguoiDung(MaNguoiDung),
 	  FOREIGN KEY(MaCongViec) REFERENCES CongViec(MaCongViec)
 );
@@ -120,3 +120,22 @@ CREATE TABLE DuLieuDiemDanh(
 
 
 ALTER TABLE DangKiOT ADD column NgayDangKi Date;
+
+ALTER TABLE NghiPhep ADD column NgayDangKi Date;
+
+ALTER TABLE Luong ADD column Nam INT;
+
+-- Update db 2602
+ALTER TABLE NguoiDung_CongViec Drop column TinhTrang_CV;
+
+
+-- Update db 2902
+CREATE TABLE BinhLuan(
+	MaBinhLuan serial NOT NULL PRIMARY KEY,
+	MaCongViec INT NOT NULL,
+	MaNguoiDung INT NOT NULL,
+	NoiDung TEXT NOT NULL,
+	ThoiGian timestamp NOT NULL,
+	FOREIGN KEY(MaCongViec) REFERENCES CongViec(MaCongViec),
+	FOREIGN KEY(MaNguoiDung) REFERENCES NguoiDung(MaNguoiDung)
+);

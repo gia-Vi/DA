@@ -22,7 +22,7 @@
 
         public int? Thuongsinhnhat { get; set; }
 
-        public int Tongthu { get; set; }
+        //public int Tongthu { get; set; }
 
         public int? Bhxh { get; set; }
 
@@ -30,8 +30,11 @@
 
         public int? Thuetncn { get; set; }
 
-        public int Tongchi { get; set; }
+        //public int Tongchi { get; set; }
 
         public int Manguoidung { get; set; }
+
+        public int? Nam { get; set; }
+
     }
 }

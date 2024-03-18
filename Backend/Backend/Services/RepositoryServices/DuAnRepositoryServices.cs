@@ -1,5 +1,6 @@
 ﻿using Backend.Models;
 using Backend.Models.Dtos;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Services.RepositoryServices
 {
@@ -11,7 +12,10 @@ namespace Backend.Services.RepositoryServices
 
         public async Task<Duan?> FindByIdAsync(int maDuAn)
         {
-            return await FindAsync(maDuAn);
+            return (await _context.Set<Duan>()
+                .Include(Duan => Duan.NguoidungDuans)
+                .Include(cv => cv.Congviecs)
+                .AsQueryable().SingleOrDefaultAsync(Duan => Duan.Maduan == maDuAn));
         }
 
         public async Task<List<Duan>> FindAll(int top, int skip, string? filter)
@@ -27,6 +31,7 @@ namespace Backend.Services.RepositoryServices
                 return new PostDto
                 {
                     Success = 1,
+                    Id = duAn.Maduan.ToString(),
                 };
             }
             catch (Exception ex)

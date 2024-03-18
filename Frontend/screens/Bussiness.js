@@ -4,6 +4,8 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
 import { useUser } from '../components/UserContext.js';
 import { format } from 'date-fns';
+import { fetchAPI } from '../apiConfig.js'; 
+
 
 
 const LeaveApplicationScreen = () => {
@@ -16,12 +18,17 @@ const LeaveApplicationScreen = () => {
   // Dummy data for leave applications
 
   useEffect(() => {
-    fetch(`http://192.168.12.85:7218/api/NghiPhep/user/${user.manguoidung.toString()}`)
-      .then((response) => response.json())
-      .then(data => {
-        setData(data.sort((a, b) => b.manghiphep - a.manghiphep))})
+    const fetchData = async () => {
+      try {
+        const data = await fetchAPI(`NghiPhep/user/${user.manguoidung.toString()}`);
+        setData(data.sort((a, b) => b.manghiphep - a.manghiphep))
+      } catch (error) {
+        console.error("Error fetching attendance data:", error);
+      }
+    };
+    fetchData();
 
-  }, []);
+  }, [user.manguoidung]);
   
   const statusFilterMap = {
     'All': 'All',
@@ -42,18 +49,17 @@ const LeaveApplicationScreen = () => {
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-  
-    fetch(`http://192.168.12.85:7218/api/NghiPhep/user/${user.manguoidung.toString()}`)
-      .then((response) => response.json())
-      .then(data => {
-        setData(data.sort((a, b) => b.manghiphep - a.manghiphep));
-        setRefreshing(false); // Kết thúc quá trình làm mới sau khi dữ liệu được cập nhật
-      })
-      .catch((error) => {
-        console.error('Error fetching data: ', error);
-        setRefreshing(false); // Kết thúc quá trình làm mới nếu có lỗi
-      });
-  
+    const fetchData = async () => {
+      try {
+        const data = await fetchAPI(`NghiPhep/user/${user.manguoidung.toString()}`);
+        setData(data.sort((a, b) => b.manghiphep - a.manghiphep))
+        setRefreshing(false);
+      } catch (error) {
+        console.error("Error fetching attendance data:", error);
+        setRefreshing(false);
+      }
+    };
+    fetchData();
   }, [user.manguoidung]);
 
   const filterApplications = (status) => {
@@ -93,11 +99,10 @@ const LeaveApplicationScreen = () => {
       }>
       {filteredApplications.map((application) => (
           <View key={application.id} style={styles.applicationCard}>
-            <Text>Loại nghỉ phép: {application.dateApplied}</Text>
-            <Text>Ngày đăng kí: {application.dateApplied}</Text>
+            <Text>Loại nghỉ phép: {application.loainghiphep}</Text>
+            <Text>Ngày đăng kí: {application.ngaydangKi}</Text>
             <Text>Từ: {format(application.ngaybatdau, "dd-MM-yyyy")}</Text>
             <Text>Đến: {format(application.ngayketthuc, "dd-MM-yyyy")}</Text>
-            <Text>Tổng: {application.total}</Text>
             <View style={[styles.statusBadge, { backgroundColor: colorStatus[application.trangthai] }]}>
               <Text>{application.trangthai}</Text>
               <Text>{application.timestamp}</Text>

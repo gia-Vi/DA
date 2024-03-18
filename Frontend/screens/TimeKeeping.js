@@ -6,10 +6,14 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
 import { format } from 'date-fns';
+import { fetchAPI } from '../apiConfig.js'; 
 
 
-const TimeKeeping = () => {
+
+
+const TimeKeeping = ({route}) => {
     const { user } = useUser();
+    const {id} = route.params;
     const [timeKeepingData, settTimeKeepingData] = useState([]);
     const [earlyMinutes , setEarlyMinutes] = useState(0);
     const [lateMinutes, setlateMinutes] = useState(0);
@@ -23,65 +27,81 @@ const TimeKeeping = () => {
     const [toDate, setToDate] = useState(lastDayOfMonth);
     const [showFromDatePicker, setShowFromDatePicker] = useState(false);
     const [showToDatePicker, setShowToDatePicker] = useState(false);
-
-
-    const fetchData = () =>{
-      fetch(`http://192.168.12.85:7218/api/ChamCong/getChamCong?maNguoiDung=${user.manguoidung.toString()}&startRequest=${format(fromDate, "yyyy-MM-dd") }&endRequest=${format(toDate, "yyyy-MM-dd")}`)
-        .then(response => response.json())
-        .then(data => {
-          console.log(data);
+    const [reload, setReload] = useState(false);
+    const [weekdaysCount, setWorkdayCount] = useState();
+    useEffect(() =>{
+      const fetchData = async () => {
+        try {
+          const data = await fetchAPI(`ChamCong/getChamCong?maNguoiDung=${id}&startRequest=${format(fromDate, "yyyy-MM-dd") }&endRequest=${format(toDate, "yyyy-MM-dd")}`);
           settTimeKeepingData(data.sort((a, b) => b.madiemdanh - a.madiemdanh));
           let earlierMinutes = 0;
           let laterMinutes = 0;
           data.map((item, index) => {
-            let dateCheckin = new Date(item.giocheckin);
-            let formattedTimeCheckin = dateCheckin.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-            let comparisonDate = new Date();
-            comparisonDate.setHours(8, 0, 0, 0); // Set time to 18:00
-            let formattedComparisonTime = comparisonDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-            if (formattedTimeCheckin > formattedComparisonTime) {
-                earlierMinutes += (dateCheckin.getHours() * 60 + dateCheckin.getMinutes()) - (comparisonDate.getHours() * 60 + comparisonDate.getMinutes());               
-            }
-            let dateCheckout = new Date(item.giocheckout);
-            let formattedTimeCheckout = dateCheckout.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-          })
-          setEarlyMinutes(earlierMinutes);
-        })
-        .catch(error => {
-          // handle the error
-        });
-    }
+                  let dateCheckin = new Date(item.giocheckin);
+                  let formattedTimeCheckin = dateCheckin.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                  let comparisonDate = new Date();
+                  comparisonDate.setHours(8, 0, 0, 0); // Set time to 18:00
+                  let formattedComparisonTime = comparisonDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                  if (formattedTimeCheckin > formattedComparisonTime) {
+                      earlierMinutes += (dateCheckin.getHours() * 60 + dateCheckin.getMinutes()) - (comparisonDate.getHours() * 60 + comparisonDate.getMinutes());               
+                  }
+                  let dateCheckout = new Date(item.giocheckout);
+                  let formattedTimeCheckout = dateCheckout.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                  let comparisonDateCheckout = new Date();
+                  comparisonDateCheckout.setHours(17, 0, 0, 0); // Set time to 18:00
+                  let formattedComparisonTimeCheckout = comparisonDateCheckout.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                  if (formattedTimeCheckout < formattedComparisonTimeCheckout) {
+                      laterMinutes += (comparisonDateCheckout.getHours() * 60 + comparisonDateCheckout.getMinutes()) - (dateCheckout.getHours() * 60 + dateCheckout.getMinutes());
+                  }
+      
+                })
+                setlateMinutes(laterMinutes);
+                setEarlyMinutes(earlierMinutes);
+                const date = new Date();
+                const weekdaysCount1 = getWeekdaysInMonth(parseInt(format(date, "yyyy"), 10),parseInt(format(date, "MM"), 10) - 1)
+                setWorkdayCount(weekdaysCount1);
+        } catch (error) {
+          console.error("Error fetching attendance data:", error);
+        }
+      };
+      fetchData();
+    }, [reload]);
 
 
     const handleFromDateChange = (event, selectedDate) => {
       const currentDate = selectedDate || fromDate;
       setShowFromDatePicker(Platform.OS === 'ios');
       setFromDate(currentDate);
-      fetchData();
+      setReload(!reload);
     };
   
     const handleToDateChange = (event, selectedDate) => {
       const currentDate = selectedDate || toDate;
       setShowToDatePicker(Platform.OS === 'ios');
       setToDate(currentDate);
-      fetchData();
+      setReload(!reload);
     };
-
-
-    
-
-
-    
-    useEffect(() => {
-      fetchData();
-      }, []); 
 
     const onRefresh = React.useCallback(() => {
         setRefreshing(true);
-        fetchData();
+        setReload(!reload);
         setRefreshing(false);
     
     }, [user.manguoidung]);
+
+
+    function getWeekdaysInMonth(year, month) {
+      let weekdaysCount = 0;
+      const date = new Date(year, month, 1);
+      while (date.getMonth() === month) {
+        const dayOfWeek = date.getDay();
+        if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+          weekdaysCount++;
+        }
+        date.setDate(date.getDate() + 1);
+      }
+      return weekdaysCount;
+    }
     return (
         <ScrollView style={styles.container} 
         refreshControl={
@@ -159,12 +179,12 @@ const TimeKeeping = () => {
             <View style={[styles.statBox, styles.earlyLeave]}>
               <FontAwesome5 name="exclamation-circle" size={30} color="#fbbd08" />
               <Text style={[styles.statText, styles.earlyLeaveText]}>Về sớm (p)</Text>
-              <Text style={styles.statNumber}>0</Text>
+              <Text style={styles.statNumber}>{lateMinutes}</Text>
             </View>
             <View style={[styles.statBox, styles.workDay]}>
               <FontAwesome5 name="business-time" size={30} color="#2185d0" />
               <Text style={[styles.statText, styles.workDayText]}>Ngày công (n)</Text>
-              <Text style={styles.statNumber}>0</Text>
+              <Text style={styles.statNumber}>{weekdaysCount}</Text>
             </View>
           </View>
     
@@ -199,7 +219,7 @@ const TimeKeeping = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffe5b4',
+    backgroundColor: '#ffffff',
   },
   header: {
     backgroundColor: '#F6A86F',

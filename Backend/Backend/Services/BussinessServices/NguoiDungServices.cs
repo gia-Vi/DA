@@ -27,9 +27,11 @@ namespace Backend.Services.BussinessServices
             return await _nguoiDungRepositoryServices.FindByEmailAsync(email);
         }
 
-        public async Task<List<Nguoidung>> FindAllAsync(int top, int skip, string? filter)
+        public async Task<List<NguoiDungResponse>> FindAllAsync(int top, int skip, string? filter)
         {
-            return await _nguoiDungRepositoryServices.FindAllAsync(top, skip, filter);
+            List<Nguoidung> nguoidungs = await _nguoiDungRepositoryServices.FindAllAsync(top, skip, filter);
+            List<NguoiDungResponse> nguoiDungResponses = _mapper.Map<List<NguoiDungResponse>>(nguoidungs);
+            return nguoiDungResponses;
         }
 
         public async Task<PostDto> AddNguoiDung(NguoiDungRequest nguoiDungRequest)

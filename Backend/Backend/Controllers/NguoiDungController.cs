@@ -1,4 +1,5 @@
 ﻿using Backend.Models;
+using Backend.Models.Dtos;
 using Backend.Request;
 using Backend.Services.BussinessServices;
 using Microsoft.AspNetCore.Mvc;
@@ -52,7 +53,7 @@ namespace Backend.Controllers
         }
 
         [HttpGet("getAll")]
-        public async Task<ActionResult<IEnumerable<Nguoidung>>> Get(int top, int skip, string? filter)
+        public async Task<ActionResult<IEnumerable<NguoiDungResponse>>> Get(int top, int skip, string? filter)
         {
             try
             {

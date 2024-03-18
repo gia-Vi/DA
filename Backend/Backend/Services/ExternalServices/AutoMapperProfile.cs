@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Backend.Models;
+using Backend.Models.Dtos;
 using Backend.Request;
 
 namespace Backend.Services.ExternalServices
@@ -14,6 +15,8 @@ namespace Backend.Services.ExternalServices
             CreateMap<OTRequest, Dangkiot>();
             CreateMap<NghiPhepRequest, Nghiphep>();
             CreateMap<NghiPhepRequest, Nghiphep>();
+            CreateMap<Nguoidung, NguoiDungResponse>();
+
         }
     }
 }

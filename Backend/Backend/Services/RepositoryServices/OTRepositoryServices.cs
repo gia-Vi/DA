@@ -1,5 +1,7 @@
 ﻿using Backend.Models;
 using Backend.Models.Dtos;
+using Backend.Request;
+using Backend.Utils;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Services.RepositoryServices
@@ -18,7 +20,9 @@ namespace Backend.Services.RepositoryServices
 
         public async Task<List<Dangkiot>> FindAll(int top, int skip, string? filter)
         {
-            return await FindAllAsync(top, skip, filter);
+            return await AddSkipQuery(AddTopQuery(
+                _context.Set<Dangkiot>().AsNoTracking(), top), skip).Include(ot => ot.ManguoidungNavigation)
+                .ToListAsync();
         }
 
         public async Task<List<Dangkiot>> FindAllOTUserAsync(int maNguoiDung)
@@ -64,6 +68,35 @@ namespace Backend.Services.RepositoryServices
                     Message = ex.Message
                 };
             }                           
+        }
+
+        public async Task<PostDto> UpdateStatusOT(Dangkiot dangkiotRequest)
+        {
+            PostDto result = new PostDto();
+            Dangkiot dangkiot = _context.Dangkiots.AsNoTracking().FirstOrDefault(e => e.Maot == dangkiotRequest.Maot);
+            try
+            {
+                dangkiot = OTUtils.UpdateDangKiOT(dangkiot, dangkiotRequest);
+                result.Success = 1;
+                _context.Dangkiots.Update(dangkiot);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                result.Success = 0;
+                result.Message = ex.Message;
+            }
+            return result;
+        }
+
+        private IQueryable<Dangkiot> AddTopQuery(IQueryable<Dangkiot> query, int top)
+        {
+            return top > 0 ? query.Take(top) : query;
+        }
+
+        private IQueryable<Dangkiot> AddSkipQuery(IQueryable<Dangkiot> query, int skip)
+        {
+            return skip > 0 ? query.Skip(skip) : query;
         }
     }
 }

@@ -23,9 +23,29 @@ namespace Backend.Services.BussinessServices
             return await _nghiPhepRepositoryServices.FindByIdAsync(maNghiphep);
         }
 
-        public async Task<List<Nghiphep>> FindAllAsync(int top, int skip, string? filter)
+        public async Task<List<NghiPhepResponse>> FindAllAsync(int top, int skip, string? filter)
         {
-            return await _nghiPhepRepositoryServices.FindAllAsync(top, skip, filter);
+            List<NghiPhepResponse> nghiPhepResponses = new List<NghiPhepResponse>();
+            List<Nghiphep> nghipheps = await _nghiPhepRepositoryServices.FindAll(top, skip, filter);
+            foreach (Nghiphep nghiphep in nghipheps)
+            {
+                NghiPhepResponse nghiPhepResponse = new NghiPhepResponse
+                {
+                    Manghiphep = nghiphep.Manghiphep,
+                    Ngaybatdau = nghiphep.Ngaybatdau,
+                    Ngayketthuc = nghiphep.Ngayketthuc,
+                    Lydo = nghiphep.Lydo,
+                    Trangthai = nghiphep.Trangthai,
+                    Tennguoidung = nghiphep.ManguoidungNavigation.Hoten,
+                    Lydotuchoi = nghiphep.Lydotuchoi,
+                    NgaydangKi = nghiphep.NgaydangKi,
+                    Loainghiphep = nghiphep .Loainghiphep,
+
+                };
+                nghiPhepResponses.Add(nghiPhepResponse);
+            }
+            return nghiPhepResponses;
+
         }
 
         public async Task<List<Nghiphep>> FindAllLeaveUserAsync(int maNguoiDung)
@@ -60,21 +80,26 @@ namespace Backend.Services.BussinessServices
 
         }
 
-        public async Task<PostDto> UpdateNghiphep(Nghiphep Nghiphep)
+        public async Task<PostDto> UpdateStatusNghiPhep(UpdateStatusNghiPhepRequest updateStatusNghiPhepRequest)
         {
-            if (Nghiphep == null)
+            if (updateStatusNghiPhepRequest == null)
             {
                 return new PostDto
                 {
                     Success = 0,
-                    Message = "Dang ki Nghiphep khong hop le"
+                    Message = "Dang ki OT khong hop le"
                 };
             }
             else
             {
                 try
                 {
-                    await _nghiPhepRepositoryServices.UpdateAsync(Nghiphep);
+                    Nghiphep nghiphep = new Nghiphep
+                    {
+                        Manghiphep = updateStatusNghiPhepRequest.Manghiphep,
+                        Trangthai = updateStatusNghiPhepRequest.Trangthai,
+                    };
+                    await _nghiPhepRepositoryServices.UpdateStatusNghiPhep(nghiphep);
                     return new PostDto
                     {
                         Success = 1,

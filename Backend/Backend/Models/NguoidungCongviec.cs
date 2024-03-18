@@ -3,13 +3,13 @@ using System.Collections.Generic;
 
 namespace Backend.Models;
 
-public partial class NguoidungCongviec
+public partial class NguoidungCongviec : BaseModel
 {
+    public int Id { get; set; }
+
     public int Manguoidung { get; set; }
 
     public int Macongviec { get; set; }
-
-    public string TinhtrangCv { get; set; } = null!;
 
     public virtual Congviec MacongviecNavigation { get; set; } = null!;
 

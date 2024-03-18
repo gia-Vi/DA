@@ -41,6 +41,9 @@ public partial class Nguoidung : BaseModel
 
     public string Diachi { get; set; } = null!;
 
+    public virtual ICollection<Binhluan> Binhluans { get; set; } = new List<Binhluan>();
+
+
     public virtual ICollection<Dangkiot> Dangkiots { get; set; } = new List<Dangkiot>();
 
     public virtual ICollection<Dulieudiemdanh> Dulieudiemdanhs { get; set; } = new List<Dulieudiemdanh>();
@@ -51,5 +54,5 @@ public partial class Nguoidung : BaseModel
 
     public virtual ICollection<NguoidungCongviec> NguoidungCongviecs { get; set; } = new List<NguoidungCongviec>();
 
-    public virtual ICollection<Duan> Maduans { get; set; } = new List<Duan>();
+    public virtual ICollection<NguoidungDuan> NguoidungDuans { get; set; } = new List<NguoidungDuan>();
 }

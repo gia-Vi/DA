@@ -22,9 +22,9 @@ namespace Backend.Services.RepositoryServices
                                                           .AsQueryable(), top), skip).ToListAsync();
         }
 
-        public async Task<Luong?> FindByMonth(int maNguoiDung, int thang)
+        public async Task<Luong?> FindByMonth(int maNguoiDung, int thang, int nam)
         {
-            return await _context.Luongs.FirstOrDefaultAsync(luong => luong.Manguoidung == maNguoiDung && luong.Thang == thang) ;
+            return await _context.Luongs.FirstOrDefaultAsync(luong => luong.Manguoidung == maNguoiDung && luong.Thang == thang && luong.Nam == nam) ;
         }
 
         public async Task<PostDto> AddLuong(Luong luong)

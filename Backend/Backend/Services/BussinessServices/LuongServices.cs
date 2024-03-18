@@ -30,9 +30,9 @@ namespace Backend.Services.BussinessServices
             return await _luongRepositoryServices.FindAllAsync(top, skip, filter);
         }
 
-        public async Task<Luong?> FindByMonth(int maNguoiDung, int thang)
+        public async Task<Luong?> FindByMonth(int maNguoiDung, int thang, int nam)
         {
-            return await _luongRepositoryServices.FindByMonth(maNguoiDung, thang);
+            return await _luongRepositoryServices.FindByMonth(maNguoiDung, thang, nam);
         }
 
         public async Task<PostDto> AddLuong(LuongRequest luongRequest)
@@ -48,6 +48,8 @@ namespace Backend.Services.BussinessServices
             try
             {
                 Luong luong = _mapper.Map<Luong>(luongRequest);
+                luong.Tongthu = luong.Luongchinh + luong.Luonghieuqua + luong.Luongngoaigio + luong.Luongboiduong + luong.Phiguixe + luong.Luongthuong + luong.Phucapcom + luong.Thuongsinhnhat;
+                luong.Tongchi = luong.Bhxh + luong.Thuetncn + luong.Tamung;
                 result = await _luongRepositoryServices.AddLuong(luong);
             }
             catch (Exception ex)
